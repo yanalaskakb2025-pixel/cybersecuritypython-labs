@@ -1,14 +1,12 @@
-"""Модуль багаторівневої системи контролю доступу (Завдання 2, Варіант 2)."""
+"""Завдання 2"""
 
 import os
 import sys
 
-# Додаємо кореневу директорію проєкту до шляху імпорту
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT_NUMBER
 
-# 1. Вихідні дані згідно з Варіантом 2
 users = {
     "sysadmin02": {
         "role": "system_admin",
@@ -60,10 +58,7 @@ blocked_users = {"external123", "old_account", "test_user"}
 
 
 def check_access(username: str, resource_level: int) -> tuple[str, str | None]:
-    """Реалізує алгоритм перевірки доступу користувача до ресурсу.
-
-    Повертає статус ('ALLOW' або 'DENY') та причину відмови.
-    """
+   
     if username not in users:
         return "DENY", "User not found"
 
@@ -86,17 +81,14 @@ def main():
         f"Студент: {STUDENT_NAME} | Група: {GROUP_NAME} | Варіант: {VARIANT_NUMBER}\n"
     )
 
-    # 2. Виведення списку ресурсів зі зміненими текстовими рівнями безпеки
     print("=== Список ресурсів системи ===")
     for res_name, res_level in resources:
         level_name = security_levels[res_level - 1]
         print(f"Ресурс: {res_name:<16} | Рівень безпеки: {level_name}")
     print("\n" + "=" * 60 + "\n")
 
-    # Об'єднуємо всіх користувачів (включно із заблокованими, яких немає в users)
     all_users_to_check = set(users.keys()) | blocked_users
 
-    # 3-4. Перевірка доступу кожного користувача до кожного ресурсу та виведення
     print("=== Результати перевірки доступу ===")
     for username in sorted(all_users_to_check):
         for res_name, res_level in resources:
