@@ -1,4 +1,4 @@
-"""Модуль реєстрації, автентифікації та JSON-логування (Завдання 3, Варіант 2)."""
+"""Завдання 3"""
 
 import csv
 import functools
@@ -8,7 +8,6 @@ import os
 import sys
 from datetime import datetime
 
-# Додаємо кореневу директорію проєкту до шляху імпорту
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT_NUMBER
@@ -18,21 +17,19 @@ class ValidationError(Exception):
     """Власний виняток для помилок валідації пароля."""
 
 
-# Налаштування для Варіанту 2
 MIN_PASSWORD_LENGTH = 8
-SALT = f"{VARIANT_NUMBER:0>5}"  # Формує "00002" для варіанту 2
+SALT = f"{VARIANT_NUMBER:0>5}"
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 CSV_FILE_PATH = os.path.join(DATA_DIR, "users.csv")
 LOG_FILE_PATH = os.path.join(DATA_DIR, "log.json")
 
-# Кортеж із 10 користувачів (валідні та невалідні паролі для перевірки)
 users_to_register = (
     ("alice_sec", "SecurePass123!"),
     ("bob_admin", "Admin#2024Pass"),
     ("charlie_dev", "DevCode99!"),
     ("diana_analyst", "Analyst2024#"),
-    ("eve_hacker", "short"),  # Повинно викликати ValidationError (довжина < 8)
+    ("eve_hacker", "short"),
     ("frank_user", "FrankPass2024"),
     ("grace_mgr", "Graceful#1"),
     ("helen_tester", "TestPass888"),
@@ -42,7 +39,7 @@ users_to_register = (
 
 
 def generate_hash(password: str, salt: str = "00000") -> str:
-    """Генерує SHA-256 хеш від конкатенації пароля та солі."""
+
     if password is None or salt is None or password == "" or salt == "":
         raise ValueError("Пароль або сіль не можуть бути порожніми.")
 
@@ -56,13 +53,13 @@ def generate_hash(password: str, salt: str = "00000") -> str:
 
 
 def create_user(username: str, password: str) -> tuple[str, str]:
-    """Створює кортеж (username, hash_value) з використанням персональної солі."""
+
     hash_value = generate_hash(password, salt=SALT)
     return username, hash_value
 
 
 def create_users(users_list: tuple[tuple[str, str], ...]) -> None:
-    """Обробляє список користувачів та записує валідні записи у CSV-файл."""
+
     os.makedirs(DATA_DIR, exist_ok=True)
 
     valid_users = []
@@ -84,7 +81,7 @@ def create_users(users_list: tuple[tuple[str, str], ...]) -> None:
 
 
 def read_users_db() -> list[tuple[str, str]]:
-    """Зчитує вміст CSV-файлу у список users_db та виводить структуровану таблицю."""
+
     users_db = []
     try:
         with open(CSV_FILE_PATH, mode="r", encoding="utf-8") as f:
@@ -98,7 +95,7 @@ def read_users_db() -> list[tuple[str, str]]:
         print(f"[Помилка читання CSV] {e}")
         return []
 
-    print("\n=== Вміст бази даних користувачів (CSV) ===")
+    print("\n Вміст бази даних користувачів CSV ")
     print(f"{'Логін':<20} | {'Хеш пароля (SHA-256)'}")
     print("-" * 65)
     for uname, hval in users_db:
@@ -109,7 +106,6 @@ def read_users_db() -> list[tuple[str, str]]:
 
 
 def log_event(func):
-    """Декоратор для JSON-логування спроб автентифікації."""
 
     @functools.wraps(func)
     def wrapper(username: str, password: str, *args, **kwargs):
@@ -154,7 +150,6 @@ def log_event(func):
 
 @log_event
 def login(username: str, password: str) -> bool:
-    """Здійснює перевірку автентифікації користувача."""
     if not username or not password:
         raise ValueError("Логін та пароль не можуть бути порожніми.")
 
@@ -173,25 +168,21 @@ def login(username: str, password: str) -> bool:
 
 
 def main():
-    """Головна функція для виконання всіх кроків Завдання 3."""
     print(
         f"Студент: {STUDENT_NAME} | Група: {GROUP_NAME} | Варіант: {VARIANT_NUMBER}\n"
     )
 
-    # 1-3. Реєстрація та створення CSV
     print("=== Реєстрація користувачів ===")
     create_users(users_to_register)
 
-    # 4. Читання з CSV
     users_db = read_users_db()
 
-    # 5-7. Тестування автентифікації та логування
     print("=== Тестування автентифікації ===")
     test_cases = [
-        ("alice_sec", "SecurePass123!"),  # Успішно
-        ("alice_sec", "WrongPass123!"),  # Невірний пароль
-        ("unknown_user", "SomePass123!"),  # Неіснуючий користувач
-        ("eve_hacker", "short"),  # Незареєстрований користувач
+        ("alice_sec", "SecurePass123!"),
+        ("alice_sec", "WrongPass123!"),
+        ("unknown_user", "SomePass123!"),
+        ("eve_hacker", "short"),
     ]
 
     for uname, pwd in test_cases:
