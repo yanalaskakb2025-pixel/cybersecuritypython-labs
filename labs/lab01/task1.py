@@ -1,15 +1,13 @@
 """Модуль аналізу надійності паролів (Завдання 1, Варіант 2)."""
 
-from collections import Counter
 import os
 import random
 import string
 import sys
+from collections import Counter
 
 # Додаємо кореневу директорію проєкту до ш шляху імпорту
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT_NUMBER
 
@@ -60,9 +58,7 @@ def check_criteria(password: str) -> dict:
     }
 
 
-def evaluate_password_strength(
-    password: str, password_counts: Counter
-) -> str:
+def evaluate_password_strength(password: str, password_counts: Counter) -> str:
     """Оцінює рівень надійності пароля за алгоритмом із завдання."""
     min_length = criteria["min_length"]
     crit = check_criteria(password)
@@ -104,9 +100,7 @@ def main():
 
     # Крок 3: Генеруємо 3 випадкові індекси та додаємо їх дублікати в кінець списку
     random.seed(42)  # Фіксуємо seed для відтворюваності
-    duplicate_indices = [
-        random.randint(0, len(passwords) - 1) for _ in range(3)
-    ]
+    duplicate_indices = [random.randint(0, len(passwords) - 1) for _ in range(3)]
     full_passwords = passwords.copy()
     for idx in duplicate_indices:
         full_passwords.append(passwords[idx])
