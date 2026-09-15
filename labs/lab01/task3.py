@@ -1,0 +1,215 @@
+"""Модуль реєстрації, автентифікації та JSON-логування (Завдання 3, Варіант 2)."""
+
+import csv
+import functools
+import hashlib
+import json
+import os
+import sys
+from datetime import datetime
+
+# Додаємо кореневу директорію проєкту до шляху імпорту
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
+from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT_NUMBER
+
+
+class ValidationError(Exception):
+    """Власний виняток для помилок валідації пароля."""
+
+
+# Налаштування для Варіанту 2
+MIN_PASSWORD_LENGTH = 8
+SALT = f"{VARIANT_NUMBER:0>5}"  # Формує "00002" для варіанту 2
+
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+CSV_FILE_PATH = os.path.join(DATA_DIR, "users.csv")
+LOG_FILE_PATH = os.path.join(DATA_DIR, "log.json")
+
+# Кортеж із 10 користувачів (валідні та невалідні паролі для перевірки)
+users_to_register = (
+    ("alice_sec", "SecurePass123!"),
+    ("bob_admin", "Admin#2024Pass"),
+    ("charlie_dev", "DevCode99!"),
+    ("diana_analyst", "Analyst2024#"),
+    ("eve_hacker", "short"),  # Повинно викликати ValidationError (довжина < 8)
+    ("frank_user", "FrankPass2024"),
+    ("grace_mgr", "Graceful#1"),
+    ("helen_tester", "TestPass888"),
+    ("ian_guest", "GuestPass2024!"),
+    ("jack_support", "Supp0rtPass!"),
+)
+
+
+def generate_hash(password: str, salt: str = "00000") -> str:
+    """Генерує SHA-256 хеш від конкатенації пароля та солі."""
+    if password is None or salt is None or password == "" or salt == "":
+        raise ValueError("Пароль або сіль не можуть бути порожніми.")
+
+    if len(password) < MIN_PASSWORD_LENGTH:
+        raise ValidationError(
+            f"Пароль занадто короткий (мінімум {MIN_PASSWORD_LENGTH} символів)."
+        )
+
+    data_to_hash = (password + salt).encode("utf-8")
+    return hashlib.sha256(data_to_hash).hexdigest()
+
+
+def create_user(username: str, password: str) -> tuple[str, str]:
+    """Створює кортеж (username, hash_value) з використанням персональної солі."""
+    hash_value = generate_hash(password, salt=SALT)
+    return username, hash_value
+
+
+def create_users(users_list: tuple[tuple[str, str], ...]) -> None:
+    """Обробляє список користувачів та записує валідні записи у CSV-файл."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+    valid_users = []
+    for username, password in users_list:
+        try:
+            user_tuple = create_user(username, password)
+            valid_users.append(user_tuple)
+        except (ValueError, ValidationError) as e:
+            print(f"[Помилка реєстрації] Користувач '{username}': {e}")
+
+    try:
+        with open(CSV_FILE_PATH, mode="w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["username", "hash_value"])
+            writer.writerows(valid_users)
+        print(f"\n[Успіх] Базу даних збережено у {CSV_FILE_PATH}")
+    except (FileNotFoundError, PermissionError, OSError) as e:
+        print(f"[Помилка запису CSV] {e}")
+
+
+def read_users_db() -> list[tuple[str, str]]:
+    """Зчитує вміст CSV-файлу у список users_db та виводить структуровану таблицю."""
+    users_db = []
+    try:
+        with open(CSV_FILE_PATH, mode="r", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            header = next(reader, None)
+            if header:
+                for row in reader:
+                    if row:
+                        users_db.append((row[0], row[1]))
+    except (FileNotFoundError, PermissionError, OSError) as e:
+        print(f"[Помилка читання CSV] {e}")
+        return []
+
+    print("\n=== Вміст бази даних користувачів (CSV) ===")
+    print(f"{'Логін':<20} | {'Хеш пароля (SHA-256)'}")
+    print("-" * 65)
+    for uname, hval in users_db:
+        print(f"{uname:<20} | {hval[:25]}...")
+    print("-" * 65 + "\n")
+
+    return users_db
+
+
+def log_event(func):
+    """Декоратор для JSON-логування спроб автентифікації."""
+
+    @functools.wraps(func)
+    def wrapper(username: str, password: str, *args, **kwargs):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        result_status = "failure"
+
+        try:
+            res = func(username, password, *args, **kwargs)
+            result_status = "success" if res else "failure"
+            return res
+        except Exception as e:
+            result_status = "failure"
+            raise e
+        finally:
+            log_entry = {
+                "event": "login",
+                "user": username,
+                "result": result_status,
+                "timestamp": timestamp,
+                "args": list(args),
+                "kwargs": kwargs,
+            }
+
+            logs = []
+            if os.path.exists(LOG_FILE_PATH):
+                try:
+                    with open(LOG_FILE_PATH, mode="r", encoding="utf-8") as f:
+                        logs = json.load(f)
+                except (json.JSONDecodeError, OSError):
+                    logs = []
+
+            logs.append(log_entry)
+
+            try:
+                with open(LOG_FILE_PATH, mode="w", encoding="utf-8") as f:
+                    json.dump(logs, f, indent=4, ensure_ascii=False)
+            except (PermissionError, OSError) as e:
+                print(f"[Помилка запису логу] {e}")
+
+    return wrapper
+
+
+@log_event
+def login(username: str, password: str) -> bool:
+    """Здійснює перевірку автентифікації користувача."""
+    if not username or not password:
+        raise ValueError("Логін та пароль не можуть бути порожніми.")
+
+    users_db = read_users_db()
+    users_dict = dict(users_db)
+
+    if username not in users_dict:
+        return False
+
+    try:
+        input_hash = generate_hash(password, salt=SALT)
+    except (ValueError, ValidationError):
+        return False
+
+    return input_hash == users_dict[username]
+
+
+def main():
+    """Головна функція для виконання всіх кроків Завдання 3."""
+    print(
+        f"Студент: {STUDENT_NAME} | Група: {GROUP_NAME} | Варіант: {VARIANT_NUMBER}\n"
+    )
+
+    # 1-3. Реєстрація та створення CSV
+    print("=== Реєстрація користувачів ===")
+    create_users(users_to_register)
+
+    # 4. Читання з CSV
+    users_db = read_users_db()
+
+    # 5-7. Тестування автентифікації та логування
+    print("=== Тестування автентифікації ===")
+    test_cases = [
+        ("alice_sec", "SecurePass123!"),  # Успішно
+        ("alice_sec", "WrongPass123!"),  # Невірний пароль
+        ("unknown_user", "SomePass123!"),  # Неіснуючий користувач
+        ("eve_hacker", "short"),  # Незареєстрований користувач
+    ]
+
+    for uname, pwd in test_cases:
+        try:
+            success = login(uname, pwd)
+            status_str = "УСПІШНО" if success else "ВІДМОВА"
+            print(f"Спроба входу user='{uname}': {status_str}")
+        except (
+            ValueError,
+            ValidationError,
+            FileNotFoundError,
+            PermissionError,
+            OSError,
+        ) as e:
+            print(f"Спроба входу user='{uname}': ПОМИЛКА ({e})")
+
+    print(f"\n[Успіх] Лог подій збережено у {LOG_FILE_PATH}")
+
+
+if __name__ == "__main__":
+    main()
