@@ -58,17 +58,20 @@ blocked_users = {"external123", "old_account", "test_user"}
 
 
 def check_access(username: str, resource_level: int) -> tuple[str, str | None]:
-   
-    if username not in users:
-        return "DENY", "User not found"
-
+    # 1. Спочатку перевіряємо, чи користувач заблокований
     if username in blocked_users:
         return "DENY", "User is blocked"
 
+    # 2. Перевіряємо наявність у системі
+    if username not in users:
+        return "DENY", "User not found"
+
+    # 3. Перевіряємо статус облікового запису
     user_info = users[username]
     if not user_info["active"]:
         return "DENY", "Account inactive"
 
+    # 4. Перевіряємо рівень допуску
     if user_info["clearance"] >= resource_level:
         return "ALLOW", None
 
