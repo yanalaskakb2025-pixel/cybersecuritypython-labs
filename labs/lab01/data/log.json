@@ -30,5 +30,37 @@
         "timestamp": "2026-09-15 22:50:23",
         "args": [],
         "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "success",
+        "timestamp": "2026-09-17 16:07:31",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "failure",
+        "timestamp": "2026-09-17 16:07:31",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "unknown_user",
+        "result": "failure",
+        "timestamp": "2026-09-17 16:07:31",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "eve_hacker",
+        "result": "failure",
+        "timestamp": "2026-09-17 16:07:31",
+        "args": [],
+        "kwargs": {}
     }
 ]
