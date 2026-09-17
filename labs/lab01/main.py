@@ -8,7 +8,7 @@ from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT_NUMBER
 
 def main():
     print(
-        f"Лабораторна робота №1 | {STUDENT_NAME}, група {GROUP_NAME}, варіант {VARIANT_NUMBER}"
+        f"Лабораторна робота №1  {STUDENT_NAME}, група {GROUP_NAME}, варіант {VARIANT_NUMBER}"
     )
 
 
