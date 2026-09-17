@@ -3,14 +3,20 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))  # Налаштування шляху та імпорт даних студента
-from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT  # Імпортує константи з файлу shared/student.py
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+)  # Налаштування шляху та імпорт даних студента
+from shared.student import (  # Імпортує константи з файлу shared/student.py
+    GROUP_NAME,
+    STUDENT_NAME,
+    VARIANT,
+)
 
 users = {  # Список з даними користувачів
     "sysadmin02": {
         "role": "system_admin",  # Роль
         "clearance": 4,  # Рівень допуску
-        "department": "Infrastructure",  # Відділ 
+        "department": "Infrastructure",  # Відділ
         "active": True,  # Статус облікогового запису
     },
     "analyst234": {
@@ -55,43 +61,58 @@ resources = [  # Список кортежів із назвою ресурсу 
 security_levels = ("Open", "Internal", "Restricted", "Top Secret")  # Рівні безпеки
 blocked_users = {"external123", "old_account", "test_user"}  # Заблоковані користувачі
 
-def check_access(username: str, resource_level: int) -> tuple[str, str | None]:     # Перевірка чи користувач заблокований
+
+def check_access(
+    username: str, resource_level: int
+) -> tuple[str, str | None]:  # Перевірка чи користувач заблокований
     if username in blocked_users:
         return "DENY", "User is blocked"
 
-    if username not in users:    # Чи є він у системі
+    if username not in users:  # Чи є він у системі
         return "DENY", "User not found"
 
-    user_info = users[username] # Перевірка статусу облікового запису
+    user_info = users[username]  # Перевірка статусу облікового запису
     if not user_info["active"]:
         return "DENY", "Account inactive"
 
     if user_info["clearance"] >= resource_level:  # Перевірка рівню допуску
         return "ALLOW", None
 
-    return "DENY", "Insufficient clearance" 
+    return "DENY", "Insufficient clearance"
+
 
 def main():  # Головна функція запуску системи контролю доступу
-    print(
-        f"Студент: {STUDENT_NAME} | Група: {GROUP_NAME} | Варіант: {VARIANT}\n"
-    )
+    print(f"Студент: {STUDENT_NAME} | Група: {GROUP_NAME} | Варіант: {VARIANT}\n")
 
     print("Список ресурсів системи")
-    for res_name, res_level in resources:  # Проходить по списку ресурсів і перетворює числовий рівень у текстову назву
+    for (
+        res_name,
+        res_level,
+    ) in (
+        resources
+    ):  # Проходить по списку ресурсів і перетворює числовий рівень у текстову назву
         level_name = security_levels[res_level - 1]
         print(f"Ресурс: {res_name:<16} | Рівень безпеки: {level_name}")
     print("\n" + "=" * 60 + "\n")
 
-    all_users_to_check = set(users.keys()) | blocked_users # Об'єднання та перевірка користувачів з двох баз
+    all_users_to_check = (
+        set(users.keys()) | blocked_users
+    )  # Об'єднання та перевірка користувачів з двох баз
 
     print("Результат перевірки доступу")
-    for username in sorted(all_users_to_check): # Перевірка доступу кожного користувача до кожного ресурсу і сортує в алфавітному порядку
-        for res_name, res_level in resources:   # По поточному користувачі проходить по всьому списку ресурсу
-            status, reason = check_access(username, res_level) 
+    for username in sorted(
+        all_users_to_check
+    ):  # Перевірка доступу кожного користувача до кожного ресурсу і сортує в алфавітному порядку
+        for (
+            res_name,
+            res_level,
+        ) in resources:  # По поточному користувачі проходить по всьому списку ресурсу
+            status, reason = check_access(username, res_level)
             if status == "ALLOW":
                 print(f"user=[{username}] resource=[{res_name}] -> ALLOW")
             else:
                 print(f"user=[{username}] resource=[{res_name}] -> DENY ({reason})")
+
 
 if __name__ == "__main__":
     main()
