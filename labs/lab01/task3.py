@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
@@ -17,7 +17,7 @@ class ValidationError(Exception):
     """Власний виняток для помилок валідації пароля."""
 
 
-MIN_PASSWORD_LENGTH = 8
+MIN_PASSWORD_LENGTH = 10
 SALT = f"{VARIANT_NUMBER:0>5}"
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -39,7 +39,6 @@ users_to_register = (
 
 
 def generate_hash(password: str, salt: str = "00000") -> str:
-
     if password is None or salt is None or password == "" or salt == "":
         raise ValueError("Пароль або сіль не можуть бути порожніми.")
 
@@ -49,17 +48,15 @@ def generate_hash(password: str, salt: str = "00000") -> str:
         )
 
     data_to_hash = (password + salt).encode("utf-8")
-    return hashlib.sha256(data_to_hash).hexdigest()
+    return hashlib.sha3_224(data_to_hash).hexdigest()
 
 
 def create_user(username: str, password: str) -> tuple[str, str]:
-
     hash_value = generate_hash(password, salt=SALT)
     return username, hash_value
 
 
 def create_users(users_list: tuple[tuple[str, str], ...]) -> None:
-
     os.makedirs(DATA_DIR, exist_ok=True)
 
     valid_users = []
@@ -81,7 +78,6 @@ def create_users(users_list: tuple[tuple[str, str], ...]) -> None:
 
 
 def read_users_db() -> list[tuple[str, str]]:
-
     users_db = []
     try:
         with open(CSV_FILE_PATH, mode="r", encoding="utf-8") as f:
@@ -96,7 +92,7 @@ def read_users_db() -> list[tuple[str, str]]:
         return []
 
     print("\n Вміст бази даних користувачів CSV ")
-    print(f"{'Логін':<20} | {'Хеш пароля (SHA-256)'}")
+    print(f"{'Логін':<20} | {'Хеш пароля (SHA3-224)'}")
     print("-" * 65)
     for uname, hval in users_db:
         print(f"{uname:<20} | {hval[:25]}...")
@@ -106,19 +102,18 @@ def read_users_db() -> list[tuple[str, str]]:
 
 
 def log_event(func):
-
     @functools.wraps(func)
     def wrapper(username: str, password: str, *args, **kwargs):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         result_status = "failure"
 
         try:
             res = func(username, password, *args, **kwargs)
             result_status = "success" if res else "failure"
             return res
-        except Exception as e:
+        except Exception:
             result_status = "failure"
-            raise e
+            raise
         finally:
             log_entry = {
                 "event": "login",
@@ -175,7 +170,7 @@ def main():
     print("=== Реєстрація користувачів ===")
     create_users(users_to_register)
 
-    users_db = read_users_db()
+    read_users_db()
 
     print("=== Тестування автентифікації ===")
     test_cases = [
