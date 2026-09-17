@@ -1,23 +1,23 @@
 """Завдання 1"""
 
-from collections import Counter
+from collections import Counter   # Kлас, який підраховує кількість повторень елементів у списку
 import os
 import random
 import string
 import sys
 
 sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))   # Налаштування шляху та імпорт даних студента
 )
 
-from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT_NUMBER
+from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT   # Імпортує константи з файлу shared/student.py
 
 passwords = [
     "Hello123!",
     "simple",
     "CompL3x@Pass",
     "password",
-    "Str0ng#2023",
+    "Str0ng#2023",    # Вихфдний список паролів
     "weak",
     "MySecur3!",
     "12345",
@@ -25,9 +25,9 @@ passwords = [
     "basic",
 ]
 
-criteria = {
+criteria = {  
     "min_length": 10,
-    "require_digits": True,
+    "require_digits": True,   # Параметри вимог до безпеки паролю
     "require_upper": True,
     "require_special": True,
 }
@@ -35,15 +35,14 @@ criteria = {
 forbidden_passwords = {
     "password",
     "simple",
-    "weak",
+    "weak",            # Заборонені паролі
     "basic",
     "12345",
     "hello",
 }
 
 
-def check_criteria(password: str) -> dict:
-    """Перевіряє відповідність пароля основним критеріям безпеки."""
+def check_criteria(password: str) -> dict:  # Перевірка пароля щодо зазначених критеріїв
     has_digit = any(char.isdigit() for char in password)
     has_upper = any(char.isupper() for char in password)
     has_lower = any(char.islower() for char in password)
@@ -58,27 +57,27 @@ def check_criteria(password: str) -> dict:
     }
 
 
-def evaluate_password_strength(
+def evaluate_password_strength(   # Перевірка на індивідуальність
     password: str, password_counts: Counter
 ) -> str:
     """Оцінює рівень надійності пароля за алгоритмом із завдання."""
-    min_length = criteria["min_length"]
+    min_length = criteria["min_length"]  # Мінімальна довжина
     crit = check_criteria(password)
 
-    if password in forbidden_passwords or len(password) < min_length:
+    if password in forbidden_passwords or len(password) < min_length: # Якщо пароль є у списку заборонених або його довжина менша за 10 символів
         return "Заборонений"
 
-    is_unique = password_counts[password] == 1
-    if crit["all_passed"] and len(password) >= min_length + 4 and is_unique:
+    is_unique = password_counts[password] == 1 # Якщо пароль зустрічається у списку точно 1 раз
+    if crit["all_passed"] and len(password) >= min_length + 4 and is_unique:  # Дотримані всі критерії, довжина >=14 і пароль є унікальний
         return "Дуже сильний"
 
-    if crit["all_passed"] and len(password) < min_length + 4:
+    if crit["all_passed"] and len(password) < min_length + 4:  #Дотримані всі критерії але довжина <14
         return "Сильний"
 
-    if len(password) >= min_length:
+    if len(password) >= min_length:  # Якщо довжина паролю більша за 10
         return "Середній"
 
-    if (
+    if (                      # Якщо не відповідає одному з критеріїв
         crit["has_digit"]
         or crit["has_upper"]
         or crit["has_lower"]
@@ -86,29 +85,29 @@ def evaluate_password_strength(
     ):
         return "Слабкий"
 
-    return "Невідомий"
+    return "Невідомий"   # Якщо жодна з умов не спрацювала
 
 
-def main():
-    """Головна функція для виконання аналізу надійності паролів"""
+def main():  # Головна функція для аналізу надійності паролів
     print(
-        f"Студентка: {STUDENT_NAME} | Група: {GROUP_NAME} | Варіант: {VARIANT_NUMBER}\n"
+        f"Студентка: {STUDENT_NAME} | Група: {GROUP_NAME} | Варіант: {VARIANT}\n"
     )
 
-    random.seed(42)  
-    duplicate_indices = [
-        random.randint(0, len(passwords) - 1) for _ in range(3)
+    random.seed(10)  # Фіксує випадковість
+    duplicate_indices = [ 
+        random.randint(0, len(passwords) - 1) for _ in range(3)  # Генерує 3 випадкові індекси зі списку паролів для створення дублікатів
+
     ]
-    full_passwords = passwords.copy()
+    full_passwords = passwords.copy()  # Створює копію списку паролів і додає до неї 3 скопійованих паролі
     for idx in duplicate_indices:
         full_passwords.append(passwords[idx])
 
-    password_counts = Counter(full_passwords)
+    password_counts = Counter(full_passwords)  # Підраховує кількість повторень кожного пароля
 
     print(f"{'№':<3} | {'Пароль':<16} | {'Довжина':<8} | {'Оцінка надійності'}")
     print("-" * 52)
 
-    for idx, pwd in enumerate(full_passwords, start=1):
+    for idx, pwd in enumerate(full_passwords, start=1):   # Цикл проходить по кожному паролю і оцінює за зазначеними критеріями
         strength = evaluate_password_strength(pwd, password_counts)
         print(f"{idx:<3} | {pwd:<16} | {len(pwd):<8} | {strength}")
 
