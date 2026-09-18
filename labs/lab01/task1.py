@@ -31,6 +31,7 @@ passwords = [
     "12345",
     "Advanced@1",
     "basic",
+    "QQQ"
 ]
 
 criteria = {
