@@ -48,7 +48,7 @@ def generate_hash(password: str, salt: str = "00000") -> str:   # Оголоше
     return hashlib.sha3_224(data_to_hash).hexdigest() # Обчислення хешу за допомогою SHA3-224 і повернення його у вигляді шістнадцяткового рядка
 
 def create_user(username: str, password: str) -> tuple[str, str]:  # Викликає користувача з сіллю і повертає логін з хешем
-    if not username or not username.strip(): # Якщо логін порожній 
+    if not username or not username.strip(): # Якщо логін порожній !!!!!!!!!!!!
         raise ValueError("Помилка!!! Логін не може бути пустим")
     if not password or not password.strip(): # Якщо порожній пароль
             raise ValueError("Помилка!!! Пароль не може бути порожнім")
@@ -76,7 +76,7 @@ def create_users(users_list: tuple[tuple[str, str], ...]) -> None: # Реєст�
     except (FileNotFoundError, PermissionError, OSError) as e:
         print(f"[Помилка запису CSV] {e}")
 
-def read_users_db() -> list[tuple[str, str]]: # Зчитування користувачів з CSV_FILE_PATH та виведення їх у термінал.
+def read_users_db() -> list[tuple[str, str]]: # Зчитування користувачів з CSV_FILE_PATH та виведення їх у бд.
     users_db = []
     try:
         with open(CSV_FILE_PATH, mode="r", encoding="utf-8") as f:  # Відкриває файл для читання
@@ -99,7 +99,7 @@ def read_users_db() -> list[tuple[str, str]]: # Зчитування корис�
 
     return users_db
 
-def log_event(func): # Перехоплює виклики логів
+def log_event(func): # Перехоплює виклики логів, декоратор для логування
     @functools.wraps(func)  # Зберігає назву та дані
     def wrapper(username: str, password: str, *args, **kwargs):  
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")  # Фіксація поточного часу та встановлення статусу спроби входу
@@ -118,7 +118,7 @@ def log_event(func): # Перехоплює виклики логів
                 "result": result_status,
                 "timestamp": timestamp,
                 "args": list(args),
-                "kwargs": kwargs,
+                "kwargs": kwargs, # Іменовані аргументи
             }
 
             logs = []  
