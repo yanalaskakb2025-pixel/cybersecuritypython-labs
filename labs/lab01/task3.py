@@ -184,7 +184,7 @@ def main():
             ValidationError,
             FileNotFoundError,
             PermissionError,
-            OSError,
+            OSError, # Сист помилка операційної системи
         ) as e:
             print(f"Спроба входу user='{uname}': Помилка ({e})")
     print(f"\n[Успіх] Логи збережено у {LOG_FILE_PATH}")
