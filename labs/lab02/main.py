@@ -8,18 +8,25 @@ def run_demo() -> None:
     print("Завдання 1")
     # Створення користувача та адміна
     print("\nСтворення користувача та адміністратора!")
-    user = User("bana_nas", "bana_nas@example.com", password="Bananas#1") 
+    user = User("bana_nas", "bana_nas@example.com", password="Bananas#1")
     print(f"Створено користувача: {user}")
 
     admin = Admin(
-        "admin_user", "admin@example.com", password="AdminPassword123!", permissions=["ban_ip", "read_logs"]  # Нaслідувач user з додатковими правами
+        "admin_user",
+        "admin@example.com",
+        password="AdminPassword123!",
+        permissions=["ban_ip", "read_logs"],  # Нaслідувач user з додатковими правами
     )
     print(f"Створено адміністратора: {admin}")
     print("\n Зміна email з валідацією ")
     user.email = "new_email@example.com"
     print(f"Новий валідний email {user.email}")
-    
-    invalid_emails = ["wrong_email_format", "a.b@lpnu.ua", "1abc@lpnu.ua"] # Валідація пошти (сеттер, інкапсуляція)
+
+    invalid_emails = [
+        "wrong_email_format",
+        "a.b@lpnu.ua",
+        "1abc@lpnu.ua",
+    ]  # Валідація пошти (сеттер, інкапсуляція)
     for email in invalid_emails:
         try:
             user.email = email
@@ -27,9 +34,11 @@ def run_demo() -> None:
             print(f"Помилка валідації: {e}")
 
     print("\nПеревірка прав адміністратора")
-    admin.grant_permission("manage_firewall") # Додавання права керувати фаєрволом
+    admin.grant_permission("manage_firewall")  # Додавання права керувати фаєрволом
     print(f"Після надання права 'manage_firewall': {admin}")
-    print(f"Перевірка has_permission('ban_ip'): {admin.has_permission('ban_ip')}")  # Перевірка
+    print(
+        f"Перевірка has_permission('ban_ip'): {admin.has_permission('ban_ip')}"
+    )  # Перевірка
 
     admin.revoke_permission("ban_ip")  # Скасування дозволу
     print(f"Після відкликання 'ban_ip': {admin}")
@@ -40,18 +49,24 @@ def run_demo() -> None:
 
     # Невдалий вхід
     res_fail = account.login("bana_nas", "WrongPassword", "127.0.0.1")
-    print(f"Невдалий вхід: result={res_fail}, is_authenticated={account.is_authenticated()}")
+    print(
+        f"Невдалий вхід: result={res_fail}, is_authenticated={account.is_authenticated()}"
+    )
 
     # Успішний вхід
     res_success = account.login("bana_nas", "Bananas#1", "127.0.0.1")
-    print(f"Успішний вхід: result={res_success}, is_authenticated={account.is_authenticated()}")
+    print(
+        f"Успішний вхід: result={res_success}, is_authenticated={account.is_authenticated()}"
+    )
 
     # Доступ через спецметод __getitem__ у класі ЮзерАкаунт
     print(f"Доступ через спецметод account['user']: {account['user']}")
 
-    # Таймаут сесії 
+    # Таймаут сесії
     if account.session:
-        account.session.last_activity = account.session.last_activity - timedelta(seconds=901)
+        account.session.last_activity = account.session.last_activity - timedelta(
+            seconds=901
+        )
     print(f"Після закінчення таймауту: is_authenticated={account.is_authenticated()}")
 
     # Оновлюємо сесію для виходу
@@ -80,11 +95,13 @@ def run_demo() -> None:
         ts = entry.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
         print(f"[{ts}] user='{entry.username}' | action='{entry.action}'")
 
-    # Якщо користувач без пароля 
+    # Якщо користувач без пароля
     print("\nКористувач без пароля")
     noname_user = User("noname", "noname@lpnu.ua", password="")
     print(f"Створено: {noname_user}")
-    noname_admin = Admin("noname_admin", "admin_noname@lpnu.ua", password="", permissions=["read_logs"])
+    noname_admin = Admin(
+        "noname_admin", "admin_noname@lpnu.ua", password="", permissions=["read_logs"]
+    )
     print(f"Створено: {noname_admin}")
 
     noname_account = UserAccount(noname_user)

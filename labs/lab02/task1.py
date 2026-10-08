@@ -6,12 +6,13 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, ClassVar
 
-PBKDF2_ITERATIONS = 100_000    # Кількість ітерацій хешування для уповільнення брутфорсу
-SALT_SIZE_BYTES = 16 # Розмір солі
-SESSION_TIMEOUT_SEC = 900   # 15 хв
+PBKDF2_ITERATIONS = 100_000  # Кількість ітерацій хешування для уповільнення брутфорсу
+SALT_SIZE_BYTES = 16  # Розмір солі
+SESSION_TIMEOUT_SEC = 900  # 15 хв
 EMAIL_REGEX = re.compile(
     r"^[a-zA-Z][a-zA-Z0-9_]{2,63}@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$"  # Який може бути емейл
 )
+
 
 class User:
     def __init__(
@@ -22,14 +23,14 @@ class User:
         password: str | None = None,
         active: bool = True,
     ) -> None:
-        if not username or not username.strip(): # Перевірка чи не порожнє
+        if not username or not username.strip():  # Перевірка чи не порожнє
             raise ValueError("Ім'я користувача не може бути порожнім.")
         self.username: str = username.strip()
         self.email: str = email
         self.role: str = role
         self.active: bool = active
-        self._password_salt: bytes = b"" # Приховане поле солі, ці поля є внутрішні
-        self._password_hash: bytes = b"" # Приховане поле хешу ІНкапсуляція
+        self._password_salt: bytes = b""  # Приховане поле солі, ці поля є внутрішні
+        self._password_hash: bytes = b""  # Приховане поле хешу ІНкапсуляція
 
         if password is not None:
             self.set_password(password)
@@ -40,13 +41,13 @@ class User:
 
     @email.setter  # Перевіряє правильність формату пошти Інкапсуляція
     def email(self, value: str) -> None:
-        if not isinstance(value, str) or not EMAIL_REGEX.match(value): 
+        if not isinstance(value, str) or not EMAIL_REGEX.match(value):
             raise ValueError(f"Некоректний формат email: '{value}'")
         self._email = value
 
     def set_password(self, password: str | None) -> None:
         """Встановлює хеш пароля та сіль"""
-        if not password:  
+        if not password:
             self._password_salt = b""
             self._password_hash = b""
             return
@@ -56,13 +57,13 @@ class User:
 
         self._password_salt = os.urandom(SALT_SIZE_BYTES)
         self._password_hash = hashlib.pbkdf2_hmac(
-            'sha256', password.encode('utf-8'), self._password_salt, PBKDF2_ITERATIONS
+            "sha256", password.encode("utf-8"), self._password_salt, PBKDF2_ITERATIONS
         )
 
     def check_password(self, password: str) -> bool:
         """Перевіряє пароль за допомогою безпечного порівняння hmac.compare_digest"""
         if not self._password_hash or not self._password_salt:
-            return False      
+            return False
         candidate_hash = hashlib.pbkdf2_hmac(
             "sha256",
             password.encode("utf-8"),
@@ -82,10 +83,11 @@ class User:
             f"role='{self.role}', status={status})"
         )
 
-class Admin(User): # Наслідування
+
+class Admin(User):  # Наслідування
     """Клас адміністратора, що наслідує User та додає управління правами доступу"""
 
-    def __init__( # Ініціалізація
+    def __init__(  # Ініціалізація
         self,
         username: str,
         email: str,
@@ -100,17 +102,19 @@ class Admin(User): # Наслідування
             password=password,
             active=active,
         )
-        self.permissions: set[str] = ( 
-            set(permissions) if permissions is not None else set() # Перетворюємо у множину бо у ній немає дублікатів
+        self.permissions: set[str] = (
+            set(permissions)
+            if permissions is not None
+            else set()  # Перетворюємо у множину бо у ній немає дублікатів
         )
 
-    def grant_permission(self, permission: str) -> None: # Додає права адміну
+    def grant_permission(self, permission: str) -> None:  # Додає права адміну
         """Надає право доступу адміністратору"""
         if not permission or not permission.strip():
             raise ValueError("Назва дозволу не може бути порожньою.")
         self.permissions.add(permission.strip())
 
-    def revoke_permission(self, permission: str) -> None: # Скасування права
+    def revoke_permission(self, permission: str) -> None:  # Скасування права
         """Відкликає право доступу адміністратора"""
         self.permissions.discard(permission.strip())
 
@@ -120,23 +124,27 @@ class Admin(User): # Наслідування
 
     def __str__(self) -> str:
         status = "active" if self.active else "inactive"
-        perms = ", ".join(sorted(self.permissions)) if self.permissions else "none" # Форматування і сортув прав 
+        perms = (
+            ", ".join(sorted(self.permissions)) if self.permissions else "none"
+        )  # Форматування і сортув прав
         return (
             f"Admin(username='{self.username}', email='{self.email}', "
             f"status={status}, permissions=[{perms}])"
         )
 
+
 class Session:
     """Клас користувацької сесії з контролем часу активності"""
+
     def __init__(self, ip: str) -> None:
         if not ip or not ip.strip():
             raise ValueError("IP-адреса сесії не може бути порожньою.")
-        now = datetime.now(timezone.utc) 
+        now = datetime.now(timezone.utc)
         self.ip: str = ip.strip()
         self.login_time: datetime = now
         self.last_activity: datetime = now
 
-    def touch(self) -> None: # Оовлює last_activity
+    def touch(self) -> None:  # Оовлює last_activity
         """Оновлює час останньої активності сесії поточним часом"""
         self.last_activity = datetime.now(timezone.utc)
 
@@ -145,23 +153,29 @@ class Session:
         if timeout_sec <= 0:
             raise ValueError("Таймаут сесії має бути додатним числом.")
         now = datetime.now(timezone.utc)
-        return (now - self.last_activity) <= timedelta(seconds=timeout_sec) # Обчислення таймауту
+        return (now - self.last_activity) <= timedelta(
+            seconds=timeout_sec
+        )  # Обчислення таймауту
 
-    def __str__(self) -> str: # Форматування
+    def __str__(self) -> str:  # Форматування
         return (
             f"Session(ip='{self.ip}', login_time='{self.login_time.isoformat()}', "
             f"last_activity='{self.last_activity.isoformat()}')"
         )
 
-@dataclass(frozen=True) # Захист від змін, але не є чистим прикладом інкапсуляції
+
+@dataclass(frozen=True)  # Захист від змін, але не є чистим прикладом інкапсуляції
 class AuditEntry:
     """Запис у журнал аудиту"""
-    timestamp: datetime  
-    username: str  
-    action: str  
+
+    timestamp: datetime
+    username: str
+    action: str
+
 
 class AuditLog:
     """Журнал аудиту подій безпеки"""
+
     def __init__(self) -> None:
         self._entries: list[AuditEntry] = []
 
@@ -189,6 +203,7 @@ class AuditLog:
             ts = entry.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
             print(f"[{ts}] user='{entry.username}' | action='{entry.action}'")
 
+
 class UserAccount:
     """Обліковий запис, який об'єднує User, Session та AuditLog (композиція)"""
 
@@ -200,9 +215,9 @@ class UserAccount:
 
     def __init__(
         self,
-        user: User,  
-        session: Session | None = None,  
-        audit_log: AuditLog | None = None,  
+        user: User,
+        session: Session | None = None,
+        audit_log: AuditLog | None = None,
     ) -> None:
         if not isinstance(user, User):
             raise TypeError("Поле 'user' має бути екземпляром класу User.")
@@ -234,7 +249,7 @@ class UserAccount:
         if self.session is None or not self.user.active:
             return False
         return self.session.is_active(timeout_sec)
- 
+
     def logout(self) -> None:
         """Завершує поточну сесію та фіксує вихід у журналі аудиту."""
         if self.session is not None:
