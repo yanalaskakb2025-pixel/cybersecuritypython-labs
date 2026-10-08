@@ -462,5 +462,133 @@
         "timestamp": "2026-09-24 18:08:34",
         "args": [],
         "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "success",
+        "timestamp": "2026-09-25 07:02:33",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:02:33",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "unknown_user",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:02:33",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "eve_hacker",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:02:33",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "success",
+        "timestamp": "2026-09-25 07:06:15",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:06:15",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "unknown_user",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:06:15",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "eve_hacker",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:06:15",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "success",
+        "timestamp": "2026-09-25 07:26:59",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:26:59",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "unknown_user",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:26:59",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "eve_hacker",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:26:59",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "success",
+        "timestamp": "2026-09-25 07:34:49",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "alice_sec",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:34:49",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "unknown_user",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:34:49",
+        "args": [],
+        "kwargs": {}
+    },
+    {
+        "event": "login",
+        "user": "eve_hacker",
+        "result": "failure",
+        "timestamp": "2026-09-25 07:34:49",
+        "args": [],
+        "kwargs": {}
     }
 ]

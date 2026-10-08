@@ -9,7 +9,12 @@ import sys
 from datetime import datetime, timezone
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))  # Налаштування шляху та імпорт даних студента
-from shared.student import GROUP_NAME, STUDENT_NAME, VARIANT  # Імпортує константи з файлу shared/student.py
+from shared.student import (  # Імпортує константи з файлу shared/student.py
+    GROUP_NAME,
+    STUDENT_NAME,
+    VARIANT,
+)
+
 
 class ValidationError(Exception): # Власний клас винятків, який успадковується від базового класу Exception
     """Виняток для помилок валідації пароля."""
@@ -33,6 +38,8 @@ users_to_register = (
     ("ian_guest", "GuestPass2024!"),
     ("jack_support", "Supp0rtPass!"),
     ("", "Supp0rtPass!"),
+    ("hwefwf", ""),
+
 )
 
 def generate_hash(password: str, salt: str = "00000") -> str:   # Оголошення ф-ції генерації хешу  
