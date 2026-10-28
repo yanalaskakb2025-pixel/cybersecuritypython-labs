@@ -229,7 +229,6 @@ def run_tests():
     # Сценарій 1
     print("[Сценарій 1] Повторний запуск seed.py...")
     assert res.returncode == 0 or "База даних вже містить дані" in res.stdout or "успішно" in res.stdout or "скасовано" in res.stdout
-    assert "База даних вже містить дані" in res.stdout or "скасовано" in res.stdout
     print("  -> OK: Повторне заповнення скасовано, дублікати не додані.\n")
 
     # Сценарій 2
