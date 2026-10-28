@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+from typing import List, Optional
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "data" / "lab3.sqlite3"
@@ -10,8 +11,6 @@ def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
-
-    # Автоматична перевірка та ініціалізація таблиць за методичкою
     cursor = conn.cursor()
     cursor.execute(
         """
@@ -45,14 +44,14 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
-def get_categories() -> list[dict]:
+def get_categories() -> List[dict]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, name FROM categories ORDER BY id ASC")
         return [dict(r) for r in cursor.fetchall()]
 
 
-def get_category_by_id(category_id: int) -> dict | None:
+def get_category_by_id(category_id: int) -> Optional[dict]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, name FROM categories WHERE id = ?", (category_id,))
@@ -93,7 +92,7 @@ def create_record(record_data) -> dict:
     return get_record_by_id(record_id)
 
 
-def get_record_by_id(record_id: int) -> dict | None:
+def get_record_by_id(record_id: int) -> Optional[dict]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -110,13 +109,13 @@ def get_record_by_id(record_id: int) -> dict | None:
 
 
 def get_records(
-    category_id: int | None = None,
-    status: str | None = None,
-    min_value: float | None = None,
-    q: str | None = None,
+    category_id: Optional[int] = None,
+    status: Optional[str] = None,
+    min_value: Optional[float] = None,
+    q: Optional[str] = None,
     limit: int = 20,
     offset: int = 0,
-) -> list[dict]:
+) -> List[dict]:
     with get_connection() as conn:
         cursor = conn.cursor()
         query = """
@@ -146,7 +145,7 @@ def get_records(
         return [dict(r) for r in cursor.fetchall()]
 
 
-def update_record(record_id: int, code: str, title: str, category_id: int, value: float, status: str) -> dict | None:
+def update_record(record_id: int, code: str, title: str, category_id: int, value: float, status: str) -> Optional[dict]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -171,7 +170,7 @@ def delete_record(record_id: int) -> bool:
         return cursor.rowcount > 0
 
 
-def create_records_batch(records_list) -> list[dict]:
+def create_records_batch(records_list) -> List[dict]:
     with get_connection() as conn:
         cursor = conn.cursor()
         created_ids = []
