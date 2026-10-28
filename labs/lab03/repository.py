@@ -226,10 +226,11 @@ def run_tests():
     print("   ЗАПУСК ПЕРЕВІРКИ СЦЕНАРІЇВ ЗАВДАННЯ 3 (Варіант 2)   ")
     print("=" * 60 + "\n")
 
-    # Сценарій 1
+    # Сценарий 1
     print("[Сценарій 1] Повторний запуск seed.py...")
+    res = subprocess.run([sys.executable, "-m", "labs.lab03.seed"], capture_output=True, text=True, check=False)
     assert res.returncode == 0 or "База даних вже містить дані" in res.stdout or "успішно" in res.stdout or "скасовано" in res.stdout
-    print("  -> OK: Повторне заповнення скасовано, дублікати не додані.\n")
+    print("  -> ОК: Повторне заповнення скасовано, дублікати не додані.\n")
 
     # Сценарій 2
     print("[Сценарій 2] Перевірка GET /ping, /student, /categories...")
