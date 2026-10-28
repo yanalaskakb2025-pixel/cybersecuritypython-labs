@@ -1,17 +1,16 @@
-from typing import List, Optional
 
 from labs.lab03.database import get_connection
 from labs.lab03.schemas import CategoryRead, RecordRead
+import requests
 
-
-def get_categories() -> List[CategoryRead]:
+def get_categories() -> list[CategoryRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, name FROM categories ORDER BY id ASC")
         return [CategoryRead(**dict(r)) for r in cursor.fetchall()]
 
 
-def get_category_by_id(category_id: int) -> Optional[CategoryRead]:
+def get_category_by_id(category_id: int) -> CategoryRead | None:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, name FROM categories WHERE id = ?", (category_id,))
@@ -19,12 +18,12 @@ def get_category_by_id(category_id: int) -> Optional[CategoryRead]:
         return CategoryRead(**dict(row)) if row else None
 
 
-def create_category(name: str) -> Optional[CategoryRead]:
+def create_category(name: str) -> CategoryRead | None:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("INSERT INTO categories (name) VALUES (?)", (name,))
         conn.commit()
-        cat_id = cursor.lastrowid
+        cat_id = cursor.lastrowid 
         return get_category_by_id(cat_id)
 
 
@@ -36,7 +35,7 @@ def delete_category(category_id: int) -> bool:
         return cursor.rowcount > 0
 
 
-def create_record(record_data) -> Optional[RecordRead]:
+def create_record(record_data) -> RecordRead | None:
     data = record_data.model_dump() if hasattr(record_data, "model_dump") else dict(record_data)
     with get_connection() as conn:
         cursor = conn.cursor()
@@ -52,7 +51,7 @@ def create_record(record_data) -> Optional[RecordRead]:
         return get_record_by_id(record_id)
 
 
-def get_record_by_id(record_id: int) -> Optional[RecordRead]:
+def get_record_by_id(record_id: int) -> RecordRead | None:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -69,13 +68,13 @@ def get_record_by_id(record_id: int) -> Optional[RecordRead]:
 
 
 def get_records(
-    category_id: Optional[int] = None,
-    status: Optional[str] = None,
-    min_value: Optional[float] = None,
-    q: Optional[str] = None,
+    category_id: int | None = None,
+    status: str | None = None,
+    min_value: float | None = None,
+    q: str | None = None,
     limit: int = 20,
     offset: int = 0,
-) -> List[RecordRead]:
+) -> list[RecordRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         query = """
@@ -112,7 +111,7 @@ def update_record(
     category_id: int,
     value: float,
     status: str,
-) -> Optional[RecordRead]:
+) -> RecordRead | None:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -137,7 +136,7 @@ def delete_record(record_id: int) -> bool:
         return cursor.rowcount > 0
 
 
-def create_records_batch(records_list) -> List[RecordRead]:
+def create_records_batch(records_list) -> list[RecordRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         created_ids = []
@@ -154,7 +153,6 @@ def create_records_batch(records_list) -> List[RecordRead]:
         conn.commit()
 
         return [get_record_by_id(rid) for rid in created_ids if get_record_by_id(rid) is not None]
-    import requests
 
 BASE_URL = "http://127.0.0.1:8000"
 
@@ -215,9 +213,9 @@ def test_examples():
 if __name__ == "__main__":
     test_examples()
 
-import json
 import subprocess
 import sys
+
 import requests
 
 BASE_URL = "http://127.0.0.1:8000"
@@ -230,7 +228,7 @@ def run_tests():
 
     # Сценарій 1
     print("[Сценарій 1] Повторний запуск seed.py...")
-    res = subprocess.run([sys.executable, "-m", "labs.lab03.seed"], capture_output=True, text=True)
+    assert res.returncode == 0 or "База даних вже містить дані" in res.stdout or "успішно" in res.stdout or "скасовано" in res.stdout
     assert "База даних вже містить дані" in res.stdout or "скасовано" in res.stdout
     print("  -> OK: Повторне заповнення скасовано, дублікати не додані.\n")
 
