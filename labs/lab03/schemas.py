@@ -1,5 +1,4 @@
 from typing import Literal
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -13,6 +12,7 @@ class CategoryCreate(CategoryBase):
 
 
 class CategoryRead(CategoryBase):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="ignore", from_attributes=True)
     id: int = Field(gt=0)
 
 
@@ -30,5 +30,6 @@ class RecordReplace(RecordCreate):
 
 
 class RecordRead(RecordCreate):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="ignore", from_attributes=True)
     id: int = Field(gt=0)
     category_name: str

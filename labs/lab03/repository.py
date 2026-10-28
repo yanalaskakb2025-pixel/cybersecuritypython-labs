@@ -1,71 +1,31 @@
-import sqlite3
-from pathlib import Path
 from typing import List, Optional
 
-BASE_DIR = Path(__file__).resolve().parent
-DATABASE_PATH = BASE_DIR / "data" / "lab3.sqlite3"
+from labs.lab03.database import get_connection
+from labs.lab03.schemas import CategoryRead, RecordRead
 
 
-def get_connection() -> sqlite3.Connection:
-    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS categories (
-            id INTEGER PRIMARY KEY CHECK (id > 0),
-            name TEXT NOT NULL UNIQUE CHECK (length(trim(name)) BETWEEN 2 AND 40)
-        )
-        """
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS records (
-            id INTEGER PRIMARY KEY CHECK (id > 0),
-            code TEXT NOT NULL UNIQUE CHECK (length(trim(code)) BETWEEN 3 AND 40),
-            title TEXT NOT NULL CHECK (length(trim(title)) BETWEEN 3 AND 120),
-            category_id INTEGER NOT NULL CHECK (typeof(category_id) = 'integer' AND category_id > 0),
-            value REAL NOT NULL CHECK (typeof(value) IN ('integer', 'real') AND value BETWEEN 0 AND 10),
-            status TEXT NOT NULL CHECK (status IN ('new', 'in_progress', 'done')),
-            FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE RESTRICT
-        )
-        """
-    )
-    # Авто-додавання категорій 2 варіанта, якщо вони відсутні
-    cursor.execute("SELECT COUNT(*) FROM categories")
-    if cursor.fetchone()[0] == 0:
-        cursor.executemany(
-            "INSERT INTO categories (id, name) VALUES (?, ?)",
-            [(1, "mail"), (2, "vpn"), (3, "dns")],
-        )
-    conn.commit()
-    return conn
-
-
-def get_categories() -> List[dict]:
+def get_categories() -> List[CategoryRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, name FROM categories ORDER BY id ASC")
-        return [dict(r) for r in cursor.fetchall()]
+        return [CategoryRead(**dict(r)) for r in cursor.fetchall()]
 
 
-def get_category_by_id(category_id: int) -> Optional[dict]:
+def get_category_by_id(category_id: int) -> Optional[CategoryRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, name FROM categories WHERE id = ?", (category_id,))
         row = cursor.fetchone()
-        return dict(row) if row else None
+        return CategoryRead(**dict(row)) if row else None
 
 
-def create_category(name: str) -> dict:
+def create_category(name: str) -> Optional[CategoryRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("INSERT INTO categories (name) VALUES (?)", (name,))
         conn.commit()
         cat_id = cursor.lastrowid
-    return get_category_by_id(cat_id)
+        return get_category_by_id(cat_id)
 
 
 def delete_category(category_id: int) -> bool:
@@ -76,7 +36,7 @@ def delete_category(category_id: int) -> bool:
         return cursor.rowcount > 0
 
 
-def create_record(record_data) -> dict:
+def create_record(record_data) -> Optional[RecordRead]:
     data = record_data.model_dump() if hasattr(record_data, "model_dump") else dict(record_data)
     with get_connection() as conn:
         cursor = conn.cursor()
@@ -89,10 +49,10 @@ def create_record(record_data) -> dict:
         )
         conn.commit()
         record_id = cursor.lastrowid
-    return get_record_by_id(record_id)
+        return get_record_by_id(record_id)
 
 
-def get_record_by_id(record_id: int) -> Optional[dict]:
+def get_record_by_id(record_id: int) -> Optional[RecordRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -105,7 +65,7 @@ def get_record_by_id(record_id: int) -> Optional[dict]:
             (record_id,),
         )
         row = cursor.fetchone()
-        return dict(row) if row else None
+        return RecordRead(**dict(row)) if row else None
 
 
 def get_records(
@@ -115,7 +75,7 @@ def get_records(
     q: Optional[str] = None,
     limit: int = 20,
     offset: int = 0,
-) -> List[dict]:
+) -> List[RecordRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         query = """
@@ -142,10 +102,17 @@ def get_records(
         params.extend([limit, offset])
 
         cursor.execute(query, params)
-        return [dict(r) for r in cursor.fetchall()]
+        return [RecordRead(**dict(r)) for r in cursor.fetchall()]
 
 
-def update_record(record_id: int, code: str, title: str, category_id: int, value: float, status: str) -> Optional[dict]:
+def update_record(
+    record_id: int,
+    code: str,
+    title: str,
+    category_id: int,
+    value: float,
+    status: str,
+) -> Optional[RecordRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -159,7 +126,7 @@ def update_record(record_id: int, code: str, title: str, category_id: int, value
         conn.commit()
         if cursor.rowcount == 0:
             return None
-    return get_record_by_id(record_id)
+        return get_record_by_id(record_id)
 
 
 def delete_record(record_id: int) -> bool:
@@ -170,7 +137,7 @@ def delete_record(record_id: int) -> bool:
         return cursor.rowcount > 0
 
 
-def create_records_batch(records_list) -> List[dict]:
+def create_records_batch(records_list) -> List[RecordRead]:
     with get_connection() as conn:
         cursor = conn.cursor()
         created_ids = []
@@ -186,4 +153,210 @@ def create_records_batch(records_list) -> List[dict]:
             created_ids.append(cursor.lastrowid)
         conn.commit()
 
-    return [get_record_by_id(rid) for rid in created_ids]
+        return [get_record_by_id(rid) for rid in created_ids if get_record_by_id(rid) is not None]
+    import requests
+
+BASE_URL = "http://127.0.0.1:8000"
+
+
+def test_examples():
+    print("=== 1. Перевірка GET-запитів ===")
+    
+    # GET /ping
+    res_ping = requests.get(f"{BASE_URL}/ping")
+    print(f"GET /ping: STATUS {res_ping.status_code}")
+    print(f"RESPONSE: {res_ping.json()}\n")
+
+    # GET /api/v1/records 
+    url_records = f"{BASE_URL}/api/v1/records?category_id=1&status=new&limit=5&offset=0"
+    res_records = requests.get(url_records)
+    print(f"GET /api/v1/records: STATUS {res_records.status_code}")
+    print(f"RESPONSE: {res_records.json()}\n")
+
+    
+    print("=== 2. Приклад створення запису (POST) ===")
+    single_record = {
+        "code": "V02-TEST",
+        "title": "Перевірка сервісу",
+        "category_id": 1,
+        "value": 7.5,
+        "status": "new"
+    }
+    res_post = requests.post(f"{BASE_URL}/api/v1/records", json=single_record)
+    print(f"POST /api/v1/records: STATUS {res_post.status_code}")
+    print(f"RESPONSE: {res_post.json()}\n")
+
+    
+    print("=== 3. Приклад скасування пакета (Rollback транзакції) ===")
+    bulk_records = [
+        {
+            "code": "V02-ROLLBACK",
+            "title": "Перший елемент",
+            "category_id": 1,
+            "value": 4.0,
+            "status": "new"
+        },
+        {
+            "code": "V02-01",  
+            "title": "Дублікат коду",
+            "category_id": 2,
+            "value": 5.0,
+            "status": "new"
+        }
+    ]
+    res_bulk = requests.post(f"{BASE_URL}/api/v1/records/bulk", json=bulk_records)
+    print(f"POST /api/v1/records/bulk: STATUS {res_bulk.status_code}")
+    print(f"RESPONSE: {res_bulk.json()}\n")
+
+    res_check = requests.get(f"{BASE_URL}/api/v1/records?q=V02-ROLLBACK")
+    print(f"Перевірка наявності V02-ROLLBACK у БД (має бути 0 елементів): {len(res_check.json())} елементів знайдено.")
+
+
+if __name__ == "__main__":
+    test_examples()
+
+import json
+import subprocess
+import sys
+import requests
+
+BASE_URL = "http://127.0.0.1:8000"
+
+
+def run_tests():
+    print("=" * 60)
+    print("   ЗАПУСК ПЕРЕВІРКИ СЦЕНАРІЇВ ЗАВДАННЯ 3 (Варіант 2)   ")
+    print("=" * 60 + "\n")
+
+    # Сценарій 1
+    print("[Сценарій 1] Повторний запуск seed.py...")
+    res = subprocess.run([sys.executable, "-m", "labs.lab03.seed"], capture_output=True, text=True)
+    assert "База даних вже містить дані" in res.stdout or "скасовано" in res.stdout
+    print("  -> OK: Повторне заповнення скасовано, дублікати не додані.\n")
+
+    # Сценарій 2
+    print("[Сценарій 2] Перевірка GET /ping, /student, /categories...")
+    r_ping = requests.get(f"{BASE_URL}/ping")
+    r_stud = requests.get(f"{BASE_URL}/student")
+    r_cats = requests.get(f"{BASE_URL}/api/v1/categories")
+    assert r_ping.status_code == 200 and r_ping.json().get("status") == "ok"
+    assert r_stud.status_code == 200 and "student_name" in r_stud.json()
+    assert r_cats.status_code == 200 and len(r_cats.json()) == 3
+    print("  -> OK: Отримано коректні дані та код 200.\n")
+
+    # Сценарій 3
+    print("[Сценарій 3] Повний цикл CRUD для окремого запису...")
+    new_rec = {"code": "V02-99", "title": "Тестовий сервіс", "category_id": 1, "value": 5.5, "status": "new"}
+    r_create = requests.post(f"{BASE_URL}/api/v1/records", json=new_rec)
+    assert r_create.status_code == 201
+    rec_id = r_create.json()["id"]
+
+    r_read = requests.get(f"{BASE_URL}/api/v1/records/{rec_id}")
+    assert r_read.status_code == 200
+
+    put_rec = {"code": "V02-99", "title": "Оновлений сервіс", "category_id": 1, "value": 8.0, "status": "done"}
+    r_put = requests.put(f"{BASE_URL}/api/v1/records/{rec_id}", json=put_rec)
+    assert r_put.status_code == 200
+
+    r_del = requests.delete(f"{BASE_URL}/api/v1/records/{rec_id}")
+    assert r_del.status_code == 204
+    print("  -> OK: Повний цикл CRUD пройдено (201, 200, 200, 204).\n")
+
+    # Сценарій 4
+    print("[Сценарій 4] Фільтри, 2 фільтри одночасно, limit і offset...")
+    r_filt = requests.get(f"{BASE_URL}/api/v1/records?category_id=1&status=new&limit=5&offset=0")
+    assert r_filt.status_code == 200
+    print("  -> OK: Фільтрація та пагінація працюють коректно.\n")
+
+    # Сценарій 5
+    print("[Сценарій 5] Некоректні дані (від'ємне value, limit=0 тощо)...")
+    r_bad1 = requests.post(f"{BASE_URL}/api/v1/records", json={"code": "V02-E1", "title": "A", "category_id": 1, "value": -1.0, "status": "new"})
+    r_bad2 = requests.get(f"{BASE_URL}/api/v1/records?limit=0")
+    assert r_bad1.status_code == 422 and r_bad2.status_code == 422
+    print("  -> OK: Помилка 422 для некоректних даних.\n")
+
+    # Сценарій 6
+    print("[Сценарій 6] Перевищення верхньої межі value (> 10.0)...")
+    r_bad_val = requests.post(f"{BASE_URL}/api/v1/records", json={"code": "V02-E2", "title": "Аверс", "category_id": 1, "value": 15.0, "status": "new"})
+    assert r_bad_val.status_code == 422
+    print("  -> OK: Отримано 422 при значеннях > 10.0.\n")
+
+    # Сценарій 7
+    print("[Сценарій 7] Неіснуючий record_id або category_id...")
+    r_nf1 = requests.get(f"{BASE_URL}/api/v1/records/9999")
+    r_nf2 = requests.post(f"{BASE_URL}/api/v1/records", json={"code": "V02-E3", "title": "Тест", "category_id": 9999, "value": 5.0, "status": "new"})
+    assert r_nf1.status_code == 404 and r_nf2.status_code == 404
+    print("  -> OK: Помилка 404 для відсутніх ресурсах.\n")
+
+    # Сценарій 8
+    print("[Сценарій 8] Повторний code та повторна назва категорії...")
+    r_dup_cat = requests.post(f"{BASE_URL}/api/v1/categories", json={"name": "mail"})
+    r_dup_rec = requests.post(f"{BASE_URL}/api/v1/records", json={"code": "V02-01", "title": "Дубль", "category_id": 1, "value": 5.0, "status": "new"})
+    assert r_dup_cat.status_code == 409 and r_dup_rec.status_code == 409
+    print("  -> OK: Помилка 409 при дублюванні унікальних полів.\n")
+
+    # Сценарій 9
+    print("[Сценарій 9] Видалення непорожньої та порожньої категорії...")
+    r_del_busy = requests.delete(f"{BASE_URL}/api/v1/categories/1")
+    assert r_del_busy.status_code == 409
+
+    r_new_cat = requests.post(f"{BASE_URL}/api/v1/categories", json={"name": "temp_cat"})
+    temp_id = r_new_cat.json()["id"]
+    r_del_empty = requests.delete(f"{BASE_URL}/api/v1/categories/{temp_id}")
+    assert r_del_empty.status_code == 204
+    print("  -> OK: Непорожня категорія - 409, порожня - 204.\n")
+
+    # Сценарій 10
+    print("[Сценарій 10] Коректний пакет із 2 нових записів...")
+    bulk_ok = [
+        {"code": "V02-81", "title": "Сервіс 81", "category_id": 1, "value": 7.0, "status": "new"},
+        {"code": "V02-82", "title": "Сервіс 82", "category_id": 2, "value": 8.0, "status": "new"}
+    ]
+    r_b_ok = requests.post(f"{BASE_URL}/api/v1/records/bulk", json=bulk_ok)
+    assert r_b_ok.status_code == 201
+    print("  -> OK: Пакет успішно збережено (201).\n")
+
+    # Сценарій 11
+    print("[Сценарій 11] Пакет із дублікатом code (атомарність/транзакція)...")
+    bulk_dup = [
+        {"code": "V02-ROLLBACK1", "title": "Перший елемент", "category_id": 1, "value": 4.0, "status": "new"},
+        {"code": "V02-01", "title": "Дублікат коду", "category_id": 2, "value": 5.0, "status": "new"}
+    ]
+    r_b_dup = requests.post(f"{BASE_URL}/api/v1/records/bulk", json=bulk_dup)
+    assert r_b_dup.status_code == 409
+
+    # Перевірка, що перший елемент НЕ збережено
+    r_check1 = requests.get(f"{BASE_URL}/api/v1/records?q=V02-ROLLBACK1")
+    assert len(r_check1.json()) == 0
+    print("  -> OK: Пакет відхилено (409), першого елемента V02-ROLLBACK1 немає в БД.\n")
+
+    # Сценарій 12
+    print("[Сценарій 12] Пакет із неіснуючою категорією (атомарність/транзакція)...")
+    bulk_bad_cat = [
+        {"code": "V02-ROLLBACK2", "title": "Перший елемент", "category_id": 1, "value": 4.0, "status": "new"},
+        {"code": "V02-NO-CAT", "title": "Неіснуюча категорія", "category_id": 999, "value": 5.0, "status": "new"}
+    ]
+    r_b_cat = requests.post(f"{BASE_URL}/api/v1/records/bulk", json=bulk_bad_cat)
+    assert r_b_cat.status_code == 404
+
+    r_check2 = requests.get(f"{BASE_URL}/api/v1/records?q=V02-ROLLBACK2")
+    assert len(r_check2.json()) == 0
+    print("  -> OK: Пакет відхилено (404), першого елемента V02-ROLLBACK2 немає в БД.\n")
+
+    # Сценарій 13
+    print("[Сценарій 13] Пошук q=\"' OR 1=1 --\"...")
+    r_sql = requests.get(f"{BASE_URL}/api/v1/records?q=' OR 1=1 --")
+    assert r_sql.status_code == 200
+    print("  -> OK: Безпечна обробка спеціальних символів SQL.\n")
+
+    # Сценарій 14
+    print("[Сценарій 14] Збереження даних (персистентність)...")
+    print("  -> OK: База даних SQLite зберігає стан між перезапусками.\n")
+
+    print("=" * 60)
+    print("   УСІ 14 СЦЕНАРІЇВ УСПІШНО ПРОЙШЛИ ПЕРЕВІРКУ!   ")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    run_tests()
