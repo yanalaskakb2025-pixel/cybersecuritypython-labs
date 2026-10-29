@@ -57,8 +57,8 @@ def get_record(record_id: int = Path(..., gt=0)):
 
 @router.put("/{record_id}", response_model=RecordRead, summary="Повна заміна змінюваних полів")
 def update_record(
-    record_id: int = Path(..., gt=0),
-    record: RecordReplace = Body(...), 
+    record_id: Annotated[int, Path(gt=0)],
+    record: RecordReplace,
 ):
     if not repository.get_category_by_id(record.category_id):
         raise HTTPException(

@@ -1,3 +1,5 @@
+# ABC' OR '1'='1 ін'єкція
+
 
 import requests
 
@@ -15,7 +17,7 @@ def get_categories() -> list[CategoryRead]:
 def get_category_by_id(category_id: int) -> CategoryRead | None:
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, name FROM categories WHERE id = ?", (category_id,))
+        cursor.execute("SELECT id, name FROM categories WHERE id = ?", (category_id,)) # Захист від ін'єкцій
         row = cursor.fetchone()
         return CategoryRead(**dict(row)) if row else None
 

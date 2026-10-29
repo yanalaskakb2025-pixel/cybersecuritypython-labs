@@ -1,6 +1,8 @@
 from typing import Literal
+
 # Pydantic перевіряє типи даних, наявність обов полів, правила обмежень і діапазони, автоматичне перетв типів даних
 from pydantic import BaseModel, ConfigDict, Field
+
 
 # 1 питання Сутності категорії і записи
 class CategoryBase(BaseModel):
