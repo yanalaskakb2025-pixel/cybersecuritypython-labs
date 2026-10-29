@@ -33,3 +33,6 @@ def initialize_database() -> None:
 
 if __name__ == "__main__":
     initialize_database()
+
+# Щоб очистити БД
+# python -c "from labs.lab03.database import get_connection; c = get_connection(); c.execute('BEGIN'); c.execute('DELETE FROM records'); c.execute('DELETE FROM categories'); c.commit(); c.close(); print('Базу очищено.')"
