@@ -1,7 +1,9 @@
 
+import requests
+
 from labs.lab03.database import get_connection
 from labs.lab03.schemas import CategoryRead, RecordRead
-import requests
+
 
 def get_categories() -> list[CategoryRead]:
     with get_connection() as conn:
@@ -215,8 +217,6 @@ if __name__ == "__main__":
 
 import subprocess
 import sys
-
-import requests
 
 BASE_URL = "http://127.0.0.1:8000"
 

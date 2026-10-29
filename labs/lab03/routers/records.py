@@ -8,7 +8,7 @@ from labs.lab03.schemas import RecordCreate, RecordRead, RecordReplace
 
 router = APIRouter(prefix="/api/v1/records", tags=["Records"])
 
-
+# Тіло запиту
 @router.post("", response_model=schemas.RecordRead, status_code=status.HTTP_201_CREATED, summary="Create Record")
 def create_record(record: schemas.RecordCreate):
     if not repository.get_category_by_id(record.category_id):
@@ -25,7 +25,7 @@ def create_record(record: schemas.RecordCreate):
         )
 
 
-@router.get("", response_model=list[RecordRead], summary="Список із фільтрами")
+@router.get("", response_model=list[RecordRead], summary="Список із фільтрами") # Параметри запиту
 def get_records(
     category_id: int | None = Query(None, gt=0),
     status_val: str | None = Query(None, alias="status"),
@@ -44,7 +44,7 @@ def get_records(
     )
 
 
-@router.get("/{record_id}", response_model=RecordRead, summary="Один запис")
+@router.get("/{record_id}", response_model=RecordRead, summary="Один запис") # Параметр шляху 
 def get_record(record_id: int = Path(..., gt=0)):
     record = repository.get_record_by_id(record_id)
     if not record:
@@ -58,7 +58,7 @@ def get_record(record_id: int = Path(..., gt=0)):
 @router.put("/{record_id}", response_model=RecordRead, summary="Повна заміна змінюваних полів")
 def update_record(
     record_id: int = Path(..., gt=0),
-    record: RecordReplace = Body(...), # noqa: B008
+    record: RecordReplace = Body(...), 
 ):
     if not repository.get_category_by_id(record.category_id):
         raise HTTPException(

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS records (
             AND value BETWEEN 0 AND 10),
     status TEXT NOT NULL
         CHECK (status IN ('new', 'in_progress', 'done')),
-    FOREIGN KEY (category_id) REFERENCES categories(id)
+    FOREIGN KEY (category_id) REFERENCES categories(id) # Встановлено зв'язок «Один до Багатьох»
         ON DELETE RESTRICT
 );
 
