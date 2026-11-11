@@ -260,7 +260,7 @@ def run_tests():
 
     r_del = requests.delete(f"{BASE_URL}/api/v1/records/{rec_id}")
     assert r_del.status_code == 204
-    print("  -> OK: Повний цикл CRUD пройдено (201, 200, 200, 204).\n")
+    print(" .\n")
 
     # Сценарій 4
     print("[Сценарій 4] Фільтри, 2 фільтри одночасно, limit і offset...")
