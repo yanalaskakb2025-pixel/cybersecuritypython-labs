@@ -134,7 +134,7 @@ def extract_record(payload: object, cve_id: str) -> dict | None:
 
     Формат запису:
         {
-            "description": str | None,  # перший непорожній опис англійською
+            "description": str | None,  # перший непорожній опис
             "vuln_status": str | None,  # vulnStatus із відповіді
             "cvss": None | {            # вибрана оцінка CVSS v3.1
                 "version": str | None,

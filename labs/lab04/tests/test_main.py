@@ -194,7 +194,7 @@ def test_other_variant_changes_rule(monkeypatch, capsys, no_network):
     assert report["decision"] == "other"
 
 
-# Мережевий режим із підміною функції клієнта 
+# Мережевий режим із підміною функції клієнта
 
 
 def test_network_mode_calls_client_once(monkeypatch, capsys):
@@ -261,7 +261,7 @@ def test_programming_errors_are_not_hidden(monkeypatch):
         main.main(["--cve", CVE_ID])
 
 
-# Інтеграція CLI + справжній клієнт із підміною requests.get 
+# Інтеграція CLI + справжній клієнт із підміною requests.get
 
 
 def test_cli_with_real_client_and_fake_get(monkeypatch, capsys):

@@ -4,15 +4,17 @@
 """
 
 import os
+
 import requests
 
 NVD_API_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 API_KEY_ENV = "NVD_API_KEY"
-TIMEOUT = (3.05, 10) # Час встановлення з'єднання, час очікування між отриманням даних
+TIMEOUT = (3.05, 10)  # Час встановлення з'єднання, час очікування між отриманням даних
 EXPECTED_STATUS = 200
 
+
 class UnexpectedStatusError(Exception):
-    """Якщо сервер відповів без HTTP-помилки, але не статусом 200 """
+    """Якщо сервер відповів без HTTP-помилки, але не статусом 200"""
 
     def __init__(self, status_code: int) -> None:
         super().__init__(f"unexpected HTTP status {status_code}")

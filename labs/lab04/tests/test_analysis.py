@@ -1,6 +1,6 @@
 """Модульні тести перевірки відповіді та правила варіанта 2.
 
-Правило: baseScore >= 8.0 і attackComplexity == "LOW" 
+Правило: baseScore >= 8.0 і attackComplexity == "LOW"
 """
 
 import copy
@@ -17,6 +17,7 @@ def report_for(payload, variant=VARIANT):
     """Проганяє відповідь через обидві функції аналізу."""
     record = analysis.extract_record(payload, CVE_ID)
     return analysis.build_report(record, CVE_ID, variant)
+
 
 @pytest.mark.parametrize(
     "score, complexity, expected",
@@ -322,6 +323,7 @@ def test_unselected_metrics_are_not_analysed():
     payload = make_payload([make_metric(score=8.0), broken])
 
     assert report_for(payload)["decision"] == "review"
+
 
 def test_optional_fields_become_none(cve, payload):
     metric = cve["metrics"]["cvssMetricV31"][0]
