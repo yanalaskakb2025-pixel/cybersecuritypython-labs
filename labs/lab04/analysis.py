@@ -1,18 +1,15 @@
-"""Перевірка відповіді NVD та правило відбору за номером варіанта.
-
-Функції модуля працюють лише з переданими аргументами: не читають файлів,
+"""Перевірка відповіді NVD та правило відбору за варіантом.
+Функції модуля працюють лише з переданими аргументами, не читають файлів,
 змінних середовища чи часу, не виконують HTTP-запитів і нічого не друкують.
-Порушення контракту даних завершується ValueError.
 """
 
 import math
 
-REJECTED_STATUS = "Rejected"
+REJECTED_STATUS = "Rejected"  # Відх запис NVD
 CVSS_VERSION = "3.1"
 MIN_SCORE = 0
 MAX_SCORE = 10
 
-# Номер варіанта -> (поріг, поле cvssData, очікуване значення)
 RULES: dict[int, tuple[float, str, str]] = {
     1: (7.0, "attackVector", "NETWORK"),
     2: (8.0, "attackComplexity", "LOW"),
@@ -51,7 +48,7 @@ def _require(condition: bool, message: str) -> None:
 
 
 def _optional_text(container: dict, key: str, label: str) -> str | None:
-    """Повертає None для відсутнього поля; наявне має бути непорожнім рядком."""
+    """Повертає None для відсутнього поля, наявне має бути непорожнім рядком."""
     if key not in container:
         return None
     value = container[key]
@@ -61,7 +58,7 @@ def _optional_text(container: dict, key: str, label: str) -> str | None:
 
 
 def _select_description(cve: dict) -> str | None:
-    """Перевіряє descriptions і повертає перший непорожній опис англійською."""
+    """Перевіряє descriptions і повертає перший непорожній опис"""
     if "descriptions" not in cve:
         return None
     descriptions = cve["descriptions"]
@@ -81,7 +78,7 @@ def _select_description(cve: dict) -> str | None:
 def _select_metric(cve: dict) -> dict | None:
     """Повертає вибраний елемент cvssMetricV31 або None, якщо оцінки v3.1 немає.
 
-    Пріоритет має перший елемент із type="Primary"; якщо такого немає,
+    Пріоритет має перший елемент із type="Primary", якщо такого немає,
     вибирається перший елемент списку.
     """
     if "metrics" not in cve:
@@ -104,7 +101,6 @@ def _select_metric(cve: dict) -> dict | None:
 
 def _check_score(score: object) -> int | float:
     """Перевіряє, що baseScore є скінченним числом від 0 до 10 і не bool."""
-    # bool є підкласом int, тому True/False відхиляються окремою перевіркою.
     is_number = isinstance(score, (int, float)) and not isinstance(score, bool)
     _require(is_number, "baseScore має бути числом")
     is_finite = not isinstance(score, float) or math.isfinite(score)

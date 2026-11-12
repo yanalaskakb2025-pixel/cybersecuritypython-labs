@@ -16,7 +16,7 @@ FAKE_KEY = "fake-key-for-tests-0000"
 
 @pytest.fixture
 def no_network(monkeypatch):
-    """Двійник fetch_response: дає перевірити, що клієнт не викликався."""
+    """Двійник fetch_response дає перевірити, що клієнт не викликався"""
     fake_fetch = Mock(side_effect=AssertionError("мережевий запит у локальному режимі"))
     monkeypatch.setattr(api_client, "fetch_response", fake_fetch)
     return fake_fetch
@@ -26,9 +26,6 @@ def write_json(tmp_path, data):
     path = tmp_path / "response.json"
     path.write_text(json.dumps(data), encoding="utf-8")
     return path
-
-
-# --- Локальний режим ---
 
 
 def test_local_run_with_sample_file(capsys, no_network):
@@ -84,7 +81,6 @@ def test_output_keeps_non_ascii_text(tmp_path, capsys, no_network):
 
     main.main(["--cve", CVE_ID, "--input", str(path)])
 
-    # ensure_ascii=False: кирилиця друкується як є, без \uXXXX.
     assert "Опис — тест" in capsys.readouterr().out
 
 
@@ -148,9 +144,6 @@ def test_load_response_returns_decoded_object(tmp_path):
     assert main.load_response(path) == {"vulnerabilities": []}
 
 
-# --- Аргументи та номер варіанта ---
-
-
 @pytest.mark.parametrize(
     "argv",
     [
@@ -201,7 +194,7 @@ def test_other_variant_changes_rule(monkeypatch, capsys, no_network):
     assert report["decision"] == "other"
 
 
-# --- Мережевий режим із підміною функції клієнта ---
+# Мережевий режим із підміною функції клієнта 
 
 
 def test_network_mode_calls_client_once(monkeypatch, capsys):
@@ -268,7 +261,7 @@ def test_programming_errors_are_not_hidden(monkeypatch):
         main.main(["--cve", CVE_ID])
 
 
-# --- Інтеграція CLI + справжній клієнт із підміною requests.get ---
+# Інтеграція CLI + справжній клієнт із підміною requests.get 
 
 
 def test_cli_with_real_client_and_fake_get(monkeypatch, capsys):
@@ -291,6 +284,6 @@ def test_cli_with_real_client_and_fake_get(monkeypatch, capsys):
         timeout=(3.05, 10),
         allow_redirects=False,
     )
-    # Ключ не потрапляє ні у звіт, ні в повідомлення.
+    # Ключ не потрапляє ні у звіт ні в повідомлення.
     assert FAKE_KEY not in captured.out
     assert FAKE_KEY not in captured.err

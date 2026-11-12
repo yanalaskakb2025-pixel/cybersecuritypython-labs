@@ -1,6 +1,6 @@
 """Модульні тести перевірки відповіді та правила варіанта 2.
 
-Правило: baseScore >= 8.0 і attackComplexity == "LOW" у тій самій вибраній оцінці.
+Правило: baseScore >= 8.0 і attackComplexity == "LOW" 
 """
 
 import copy
@@ -17,10 +17,6 @@ def report_for(payload, variant=VARIANT):
     """Проганяє відповідь через обидві функції аналізу."""
     record = analysis.extract_record(payload, CVE_ID)
     return analysis.build_report(record, CVE_ID, variant)
-
-
-# --- Правило варіанта: межа порога та ознака ---
-
 
 @pytest.mark.parametrize(
     "score, complexity, expected",
@@ -62,7 +58,6 @@ def test_report_contains_all_fields(payload):
 
 
 def test_sample_gives_other_for_variant_15(payload):
-    # Варіант 15 очікує attackComplexity == "HIGH", у зразку значення LOW.
     report = report_for(payload, variant=15)
 
     assert report["decision"] == "other"
@@ -71,9 +66,6 @@ def test_sample_gives_other_for_variant_15(payload):
         "field": "attackComplexity",
         "expected": "HIGH",
     }
-
-
-# --- Стани not_found, rejected, insufficient_data ---
 
 
 def test_not_found_for_empty_list(payload):
@@ -154,9 +146,6 @@ def test_missing_variant_field_gives_insufficient_data(cve, payload):
     assert report["decision"] == "insufficient_data"
     assert report["observed"] is None
     assert report["score"] == 9.8
-
-
-# --- Некоректні дані спричиняють ValueError ---
 
 
 @pytest.mark.parametrize("value", [None, "MEDIUM", "low", "", 1, True, ["LOW"]])
@@ -280,9 +269,6 @@ def test_invalid_variant_raises(payload, variant):
         analysis.build_report(record, CVE_ID, variant)
 
 
-# --- Вибір оцінки: Primary має пріоритет ---
-
-
 def test_primary_has_priority_over_preceding_secondary():
     payload = make_payload(
         [
@@ -298,7 +284,7 @@ def test_primary_has_priority_over_preceding_secondary():
 
     report = report_for(payload)
 
-    # Secondary дав би review; правильний вибір Primary дає other.
+    # Secondary дав би review правильний вибір Primary дає other.
     assert report["score"] == 5.0
     assert report["observed"] == "HIGH"
     assert report["score_source"] == "nvd@nist.gov"
@@ -336,10 +322,6 @@ def test_unselected_metrics_are_not_analysed():
     payload = make_payload([make_metric(score=8.0), broken])
 
     assert report_for(payload)["decision"] == "review"
-
-
-# --- Необов'язкові поля ---
-
 
 def test_optional_fields_become_none(cve, payload):
     metric = cve["metrics"]["cvssMetricV31"][0]
@@ -382,9 +364,6 @@ def test_description_is_none_without_english_text(cve, payload):
     cve["descriptions"] = [{"lang": "es", "value": "Descripcion sintetica."}]
 
     assert report_for(payload)["description"] is None
-
-
-# --- Функції не змінюють вхідні дані ---
 
 
 def test_payload_is_not_modified(payload):

@@ -7,7 +7,7 @@ CVE_ID = "CVE-2099-10001"
 
 @pytest.fixture(autouse=True)
 def isolated_environment(monkeypatch):
-    """Видаляє успадкований ключ і забороняє справжні запити Requests."""
+    """Видаляє успадкований ключ і забороняє справжні запити Requests"""
     monkeypatch.delenv("NVD_API_KEY", raising=False)
     monkeypatch.delattr("requests.sessions.Session.request")
 
@@ -18,7 +18,7 @@ def make_metric(
     metric_type="Primary",
     source="nvd@nist.gov",
 ):
-    """Створює новий елемент cvssMetricV31 із заданими оцінкою та складністю атаки."""
+    """Створює новий елемент cvssMetricV31 із заданими оцінкою та складністю атаки"""
     return {
         "source": source,
         "type": metric_type,
@@ -40,7 +40,7 @@ def make_metric(
 
 
 def make_payload(metrics=None, status="Analyzed", cve_id=CVE_ID):
-    """Створює нову відповідь NVD з одним записом; metrics — список оцінок v3.1."""
+    """Створює нову відповідь NVD з одним записом metrics — список оцінок v3.1."""
     if metrics is None:
         metrics = [make_metric()]
     return {
@@ -78,5 +78,5 @@ def payload():
 
 @pytest.fixture
 def cve(payload):
-    """Об'єкт cve всередині свіжої відповіді — для точкових змін у тестах."""
+    """Об'єкт cve всередині свіжої відповіді для точкових змін у тестах."""
     return payload["vulnerabilities"][0]["cve"]

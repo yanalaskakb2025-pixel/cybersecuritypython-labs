@@ -1,7 +1,7 @@
 """Консольна утиліта: запис NVD за ідентифікатором CVE -> JSON-звіт за варіантом.
 
 Запуск із кореня репозиторію (локальний режим і один запит до NVD):
-    python -m labs.lab04.main --cve CVE-2099-10001 \\
+    python -m labs.lab04.main --cve CVE-2099-10001
         --input labs/lab04/data/nvd_sample.json
     python -m labs.lab04.main --cve CVE-2021-44228
 """
@@ -21,13 +21,13 @@ CVE_PATTERN = re.compile(r"CVE-[0-9]{4}-[0-9]{4,}")
 MIN_VARIANT = 1
 MAX_VARIANT = 15
 
-EXIT_OK = 0
-EXIT_DATA_ERROR = 1
-EXIT_USAGE_ERROR = 2
+EXIT_OK = 0  # Звіт сформовано
+EXIT_DATA_ERROR = 1  # Помилка отримання, читання чи перевірки даних
+EXIT_USAGE_ERROR = 2  # Неправильні аргументи або номер варіанта
 
 
 def cve_id_type(value: str) -> str:
-    """Перевіряє повний збіг аргументу з шаблоном CVE-РРРР-NNNN (регістр важливий)."""
+    """Перевіряє повний збіг аргументу з шаблоном CVE-РРРР-NNNN"""
     if CVE_PATTERN.fullmatch(value) is None:
         raise argparse.ArgumentTypeError(
             f"некоректний ідентифікатор CVE: {value!r} (очікувано CVE-РРРР-NNNN)"
@@ -43,7 +43,7 @@ def is_valid_variant(value: object) -> bool:
 
 
 def load_response(path: str | Path) -> object:
-    """Читає локальну відповідь NVD з UTF-8 JSON-файла; повертає декодований об'єкт."""
+    """Читає локальну відповідь NVD з UTF-8 JSON-файла і повертає декодований об'єкт."""
     with open(path, encoding="utf-8") as file:
         return json.load(file)
 
@@ -64,19 +64,19 @@ def build_parser() -> argparse.ArgumentParser:
         "--input",
         type=Path,
         default=None,
-        help="шлях до локальної відповіді NVD; із ним мережа не використовується",
+        help="шлях до локальної відповіді NVD із ним мережа не використовується",
     )
     return parser
 
 
 def _fail(message: str) -> int:
-    """Друкує пояснення помилки в stderr і повертає код 1."""
+    """Друкує пояснення помилки в stderr і повертає код 1"""
     print(f"Помилка: {message}", file=sys.stderr)
     return EXIT_DATA_ERROR
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Розбирає аргументи, отримує відповідь, друкує звіт; повертає код завершення."""
+    """Розбирає аргументи, отримує відповідь, друкує звіт; повертає код завершення"""
     if not is_valid_variant(VARIANT_NUMBER):
         print(
             "Помилка: VARIANT_NUMBER у shared/student.py має бути цілим від 1 до 15.",
@@ -93,8 +93,6 @@ def main(argv: list[str] | None = None) -> int:
             payload = api_client.fetch_response(args.cve)
         record = analysis.extract_record(payload, args.cve)
         report = analysis.build_report(record, args.cve, VARIANT_NUMBER)
-    # Мережеві винятки стоять перед OSError і ValueError: RequestException успадковує
-    # OSError, а requests.exceptions.JSONDecodeError є ще й ValueError.
     except requests.exceptions.Timeout:
         return _fail("перевищено час очікування відповіді NVD.")
     except requests.exceptions.ConnectionError:

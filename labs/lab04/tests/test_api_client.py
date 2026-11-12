@@ -20,9 +20,6 @@ def make_response(status_code=200, payload=None):
     return response
 
 
-# --- build_headers ---
-
-
 def test_headers_without_key():
     assert api_client.build_headers() == {"Accept": "application/json"}
 
@@ -44,13 +41,10 @@ def test_headers_with_key_strip_spaces(monkeypatch):
 
 
 def test_key_is_read_at_call_time(monkeypatch):
-    # Ключ задано вже після імпорту модуля, отже читання відбувається під час виклику.
+    # Ключ задано вже після імпорту модуля, отже читання відбувається під час виклику
     assert "apiKey" not in api_client.build_headers()
     monkeypatch.setenv("NVD_API_KEY", FAKE_KEY)
     assert api_client.build_headers()["apiKey"] == FAKE_KEY
-
-
-# --- fetch_response: успішний запит ---
 
 
 def test_fetch_uses_expected_request(monkeypatch):
@@ -83,13 +77,9 @@ def test_fetch_sends_key_in_header_not_in_url(monkeypatch):
     assert FAKE_KEY not in args[0]
 
 
-# --- fetch_response: помилки ---
-
-
 @pytest.mark.parametrize("status_code", [403, 404, 429, 500, 503])
 def test_fetch_propagates_http_error(monkeypatch, status_code):
     response = make_response(status_code=status_code)
-    # Сам status_code не піднімає виняток у двійника — задаємо side_effect явно.
     response.raise_for_status.side_effect = requests.exceptions.HTTPError(
         response=response
     )
@@ -129,7 +119,7 @@ def test_fetch_propagates_network_error(monkeypatch, error):
     with pytest.raises(error):
         api_client.fetch_response(CVE_ID)
 
-    # Автоматичних повторів немає: рівно один виклик.
+    # Автоматичних повторів немає рівно один виклик.
     assert fake_get.call_count == 1
 
 
@@ -145,6 +135,5 @@ def test_fetch_propagates_invalid_json(monkeypatch):
 
 
 def test_real_network_is_blocked():
-    # Перевірка самої фікстури isolated_environment: без підміни запит неможливий.
     with pytest.raises(AttributeError):
         api_client.fetch_response(CVE_ID)
